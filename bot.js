@@ -202,10 +202,8 @@ async function send(text) {
 
 async function handleCommand(text) {
   const t = text.toLowerCase().trim();
-
   if (t === 'status' || t === 'dashboard' || t === 'today') {
-    await send(buildDashboard());
-    return true;
+    await send(buildDashboard()); return true;
   }
   if (t.match(/gym done|finished gym|completed gym|just gymmed/)) {
     const g = GYM_SPLIT[getDOW()] || GYM_SPLIT['Monday'];
@@ -346,24 +344,18 @@ function setupSchedules() {
 async function onMessage(messages) {
   const msg = messages[0];
   if (!msg || msg.key.fromMe) return;
-
   const senderJid = msg.key.remoteJid;
   const senderNum = senderJid.replace('@s.whatsapp.net', '').replace('@c.us', '');
   if (senderNum !== MY_NUM) return;
-
   const text = (msg.message?.conversation || msg.message?.extendedTextMessage?.text || '').trim();
   console.log('Message from Bhumi: ' + text.substring(0, 60));
-
   const handled = await handleCommand(text);
   if (handled) return;
-
   let imgData = null;
   let imgMime = null;
   let prompt = text;
-
   const imgMsg = msg.message?.imageMessage;
   const videoMsg = msg.message?.videoMessage;
-
   if (imgMsg || videoMsg) {
     try {
       const buffer = await downloadMediaMessage(msg, 'buffer', {}, { reuploadRequest: sock.updateMediaMessage });
@@ -371,13 +363,11 @@ async function onMessage(messages) {
       if (imgMsg) {
         imgMime = imgMsg.mimetype || 'image/jpeg';
         prompt = text || 'Analyse this meal photo. Identify all food items, estimate calories, protein, carbs, fat. Is it PCOD-safe and liver-friendly? Give me the running daily total.';
-        console.log('Photo received for meal analysis');
       } else if (videoMsg) {
         imgMime = 'image/jpeg';
         const g = GYM_SPLIT[getDOW()] || GYM_SPLIT['Monday'];
         prompt = 'GYM VIDEO RECEIVED. Analyse: 1) Identify exercise 2) Check posture and form in detail 3) Estimate calories burnt 4) Rate effectiveness 1-10 5) Give 2-3 coaching cues 6) Does this match today plan: ' + g.focus + '? 7) What to do next?';
         day.gym = true; day.gymBurn = g.burn || 250; saveDay();
-        console.log('Gym video received for form analysis');
       }
     } catch (e) {
       console.error('Media error:', e.message);
@@ -385,12 +375,9 @@ async function onMessage(messages) {
       return;
     }
   }
-
   if (!prompt && !imgData) return;
-
   const reply = await askAI(prompt, imgData, imgMime);
   await send(reply);
-
   if (imgData && imgMime && imgMime.startsWith('image/') && day.meals.length > 0) {
     setTimeout(async () => {
       await send('Running Total: ' + day.cal + '/1500 kcal\nProtein: ' + day.protein + '/90g | Water: ' + day.water + '/8\n' + Math.max(0, 1500 - day.cal) + ' kcal remaining today');
@@ -413,7 +400,10 @@ async function startBot() {
     auth: state,
     printQRInTerminal: false,
     logger: pino({ level: 'silent' }),
-    browser: ['Bhumi Bot', 'Chrome', '1.0']
+    browser: ['Ubuntu', 'Chrome', '20.0.04'],
+    connectTimeoutMs: 60000,
+    defaultQueryTimeoutMs: 60000,
+    keepAliveIntervalMs: 10000
   });
 
   sock.ev.on('creds.update', saveCreds);
