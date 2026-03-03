@@ -427,10 +427,11 @@ async function startBot() {
     auth: state,
     printQRInTerminal: false,
     logger: pino({ level: 'silent' }),
-    browser: ['Ubuntu', 'Chrome', '20.0.04'],
+    browser: ['WhatsApp Web', '', ''],
     connectTimeoutMs: 60000,
     defaultQueryTimeoutMs: 60000,
-    keepAliveIntervalMs: 10000
+    keepAliveIntervalMs: 10000,
+    version: [2, 3000, 1015901307]
   });
 
   sock.ev.on('creds.update', saveCreds);
@@ -438,7 +439,7 @@ async function startBot() {
   sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
     if (qr) {
       currentQR = qr;
-      console.log('QR code ready - open your Railway domain URL to scan it!');
+      console.log('QR ready - open your Railway domain URL to scan!');
       qrcode.generate(qr, { small: true });
     }
     if (connection === 'open') {
