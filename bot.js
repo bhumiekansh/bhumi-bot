@@ -4,7 +4,34 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const cron = require('node-cron');
 const fs = require('fs');
 const qrcode = require('qrcode-terminal');
+const QRCode = require('qrcode');
+const express = require('express');
 const pino = require('pino');
+
+const app = express();
+let currentQR = null;
+
+app.get('/', async (req, res) => {
+  if (!currentQR) {
+    res.send('<html><body style="background:#111;display:flex;justify-content:center;align-items:center;height:100vh"><h2 style="color:white;font-family:sans-serif">Waiting for QR... refresh in 10 seconds</h2></body></html>');
+    return;
+  }
+  try {
+    const qrImage = await QRCode.toDataURL(currentQR);
+    res.send(`<html><body style="background:#111;display:flex;justify-content:center;align-items:center;height:100vh;margin:0">
+      <div style="text-align:center;font-family:sans-serif">
+        <h2 style="color:white">Scan with WhatsApp</h2>
+        <img src="${qrImage}" style="width:300px;height:300px;border:8px solid white;border-radius:12px"/>
+        <p style="color:#aaa">Open WhatsApp > Settings > Linked Devices > Link a Device</p>
+        <p style="color:#666;font-size:12px">Refresh page if QR expired</p>
+      </div>
+    </body></html>`);
+  } catch (e) {
+    res.send('<html><body style="background:#111"><h2 style="color:red">Error generating QR. Refresh.</h2></body></html>');
+  }
+});
+
+app.listen(3000, () => console.log('QR web page running on port 3000'));
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
@@ -410,13 +437,12 @@ async function startBot() {
 
   sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
     if (qr) {
-      console.log('\n============================================');
-      console.log('   SCAN THIS QR CODE WITH YOUR WHATSAPP');
-      console.log('============================================\n');
+      currentQR = qr;
+      console.log('QR code ready - open your Railway domain URL to scan it!');
       qrcode.generate(qr, { small: true });
-      console.log('\nOn iPhone: WhatsApp > Settings > Linked Devices > Link a Device\n');
     }
     if (connection === 'open') {
+      currentQR = null;
       console.log('Bot is LIVE!');
       setupSchedules();
       setTimeout(async () => {
