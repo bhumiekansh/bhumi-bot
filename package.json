@@ -4,11 +4,12 @@
   "main": "bot.js",
   "scripts": { "start": "node bot.js" },
   "dependencies": {
-    "whatsapp-web.js": "^1.23.0",
-    "qrcode-terminal": "^0.12.0",
+    "@whiskeysockets/baileys": "^6.7.0",
     "@google/generative-ai": "^0.15.0",
     "node-cron": "^3.0.3",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "qrcode-terminal": "^0.12.0",
+    "pino": "^9.0.0"
   },
   "engines": { "node": ">=18.0.0" }
 }
