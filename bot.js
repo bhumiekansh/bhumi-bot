@@ -399,6 +399,14 @@ async function onMessage(messages) {
 }
 
 async function startBot() {
+  try {
+    const authDir = '/tmp/.baileys_auth';
+    if (fs.existsSync(authDir)) {
+      fs.rmSync(authDir, { recursive: true, force: true });
+      console.log('Cleared old auth - fresh QR will appear');
+    }
+  } catch (e) {}
+
   const { state, saveCreds } = await useMultiFileAuthState('/tmp/.baileys_auth');
 
   sock = makeWASocket({
